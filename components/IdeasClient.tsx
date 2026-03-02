@@ -8,6 +8,7 @@ import TagFilter from './TagFilter'
 import SortSelect from './SortSelect'
 import ScatterMatrix from './ScatterMatrix'
 import StatsView from './StatsView'
+import TopPicks from './TopPicks'
 import type { Idea } from '@/lib/types'
 
 type ViewMode = 'cards' | 'matrix' | 'stats'
@@ -139,6 +140,12 @@ export default function IdeasClient({ initialIdeas, initialTotal, tags }: IdeasC
       {/* Cards view */}
       {viewMode === 'cards' && (
         <>
+          {/* Top Picks */}
+          <TopPicks onIdeaClick={(id) => {
+            const idea = ideas.find((i) => i.id === id)
+            if (idea) setSelectedIdea(idea)
+          }} />
+
           {/* Archived tabs */}
           <div
             className="mb-4 flex items-center gap-1 p-1 rounded-lg"

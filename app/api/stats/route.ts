@@ -11,6 +11,7 @@ export async function GET() {
       tagDistResult,
       monthlyResult,
       scoreDistResult,
+      topPicksResult,
     ] = await Promise.all([
       query<{ count: string }>('SELECT COUNT(*) as count FROM toy_project_ideas'),
       query<{ count: string }>('SELECT COUNT(*) as count FROM toy_project_ideas WHERE archived = true'),
@@ -48,6 +49,18 @@ export async function GET() {
            AND business_feasibility_score IS NOT NULL
          ORDER BY created_at DESC`
       ),
+      query<{ id: number; name: string; difficulty: number; feasibility: number; opportunity: number; one_liner: string | null; bookmarked: boolean }>(
+        `SELECT id, idea_name_ko as name, implementation_difficulty_score as difficulty,
+                business_feasibility_score as feasibility,
+                (business_feasibility_score - implementation_difficulty_score) as opportunity,
+                one_liner, bookmarked
+         FROM toy_project_ideas
+         WHERE implementation_difficulty_score IS NOT NULL
+           AND business_feasibility_score IS NOT NULL
+           AND archived = false
+         ORDER BY opportunity DESC, business_feasibility_score DESC
+         LIMIT 5`
+      ),
     ])
 
     return NextResponse.json({
@@ -59,6 +72,7 @@ export async function GET() {
       tagDistribution: tagDistResult.map((r) => ({ tag: r.tag, count: parseInt(r.count) })),
       monthlyTrend: monthlyResult.map((r) => ({ month: r.month, count: parseInt(r.count) })).reverse(),
       scoreDistribution: scoreDistResult,
+      topPicks: topPicksResult,
     })
   } catch (error) {
     console.error('Error fetching stats:', error)
