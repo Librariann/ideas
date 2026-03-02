@@ -11,6 +11,7 @@ export interface Idea {
   implementation_difficulty_score: number | null
   business_feasibility_score: number | null
   archived: boolean
+  bookmarked: boolean
 }
 
 export interface IdeaNotes {

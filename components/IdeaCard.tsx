@@ -8,6 +8,7 @@ interface IdeaCardProps {
   idea: Idea
   index: number
   onClick: (idea: Idea) => void
+  onBookmark: (id: number) => void
 }
 
 function getCategoryColor(tags: string[] | undefined): string {
@@ -21,7 +22,7 @@ function getCategoryColor(tags: string[] | undefined): string {
   return 'rgb(139 92 246)'
 }
 
-export default function IdeaCard({ idea, index, onClick }: IdeaCardProps) {
+export default function IdeaCard({ idea, index, onClick, onBookmark }: IdeaCardProps) {
   const tags = idea.notes?.tags || []
   const accentColor = getCategoryColor(tags)
   const createdDate = format(new Date(idea.created_at), 'yy.MM.dd', { locale: ko })
@@ -43,6 +44,38 @@ export default function IdeaCard({ idea, index, onClick }: IdeaCardProps) {
         className="absolute top-0 left-0 right-0 h-[2px] opacity-70 group-hover:opacity-100 transition-opacity"
         style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }}
       />
+
+      {/* Bookmark button */}
+      <button
+        className="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center rounded-md opacity-0 group-hover:opacity-100 transition-all z-10"
+        style={{
+          background: idea.bookmarked ? 'rgb(234 179 8 / 0.15)' : 'rgb(25 25 42)',
+          color: idea.bookmarked ? 'rgb(234 179 8)' : 'rgb(90 90 130)',
+        }}
+        onClick={(e) => {
+          e.stopPropagation()
+          onBookmark(idea.id)
+        }}
+        aria-label={idea.bookmarked ? '즐겨찾기 해제' : '즐겨찾기'}
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill={idea.bookmarked ? 'currentColor' : 'none'}>
+          <path
+            d="M7 1.5l1.76 3.57 3.94.57-2.85 2.78.67 3.93L7 10.52 3.48 12.35l.67-3.93L1.3 5.64l3.94-.57L7 1.5z"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
+      {/* Always-visible bookmark indicator */}
+      {idea.bookmarked && (
+        <div className="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center group-hover:opacity-0 transition-opacity">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="rgb(234 179 8)" opacity={0.7}>
+            <path d="M7 1.5l1.76 3.57 3.94.57-2.85 2.78.67 3.93L7 10.52 3.48 12.35l.67-3.93L1.3 5.64l3.94-.57L7 1.5z" />
+          </svg>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-2">

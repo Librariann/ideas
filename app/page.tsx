@@ -7,7 +7,7 @@ import IdeasClient from '@/components/IdeasClient'
 async function getInitialData() {
   const [ideasResult, countResult, tagsResult] = await Promise.all([
     query<Idea>(
-      `SELECT id, created_at, idea_name_ko, idea_name_en, one_liner, cadence_hours, model_used, notes, implementation_difficulty_score, business_feasibility_score, archived
+      `SELECT id, created_at, idea_name_ko, idea_name_en, one_liner, cadence_hours, model_used, notes, implementation_difficulty_score, business_feasibility_score, archived, bookmarked
        FROM toy_project_ideas
        ORDER BY archived ASC, created_at DESC
        LIMIT 24`
