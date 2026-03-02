@@ -1,65 +1,105 @@
-import Image from "next/image";
+export const dynamic = 'force-dynamic'
 
-export default function Home() {
+import { query } from '@/lib/db'
+import type { Idea } from '@/lib/types'
+import IdeasClient from '@/components/IdeasClient'
+
+async function getInitialData() {
+  const [ideasResult, countResult, tagsResult] = await Promise.all([
+    query<Idea>(
+      `SELECT id, created_at, idea_name_ko, idea_name_en, one_liner, cadence_hours, model_used, notes, implementation_difficulty_score, business_feasibility_score, archived
+       FROM toy_project_ideas
+       ORDER BY archived ASC, created_at DESC
+       LIMIT 24`
+    ),
+    query<{ count: string }>('SELECT COUNT(*) as count FROM toy_project_ideas'),
+    query<{ tag: string }>(
+      `SELECT DISTINCT jsonb_array_elements_text(notes->'tags') as tag
+       FROM toy_project_ideas
+       WHERE notes->'tags' IS NOT NULL
+       ORDER BY tag`
+    ).catch(() => [] as { tag: string }[]),
+  ])
+
+  return {
+    ideas: ideasResult,
+    total: parseInt(countResult[0]?.count || '0'),
+    tags: tagsResult.map((r) => r.tag).filter(Boolean),
+  }
+}
+
+export default async function Home() {
+  const { ideas, total, tags } = await getInitialData()
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div
+      className="min-h-screen"
+      style={{ background: 'rgb(10 10 15)' }}
+    >
+      {/* Background noise texture */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139,92,246,0.08) 0%, transparent 60%)`,
+        }}
+      />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        {/* Header */}
+        <header className="mb-10">
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            <div>
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs mb-4"
+                style={{
+                  background: 'rgb(139 92 246 / 0.1)',
+                  border: '1px solid rgb(139 92 246 / 0.2)',
+                  color: 'rgb(167 139 250)',
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: 'rgb(167 139 250)' }}
+                />
+                {total}개 아이디어 수집됨
+              </div>
+              <h1
+                className="text-3xl sm:text-4xl font-bold tracking-tight"
+                style={{
+                  color: 'rgb(240 238 255)',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                아이디어 보관함
+              </h1>
+              <p
+                className="mt-2 text-sm"
+                style={{ color: 'rgb(100 100 140)' }}
+              >
+                축적된 생각들, 언젠가 현실이 될 씨앗들
+              </p>
+            </div>
+          </div>
+        </header>
+
+        {/* Client component for interactivity */}
+        <IdeasClient
+          initialIdeas={ideas}
+          initialTotal={total}
+          tags={tags}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
+
+      {/* Footer */}
+      <footer
+        className="mt-20 py-8 text-center text-xs"
+        style={{
+          borderTop: '1px solid rgb(22 22 38)',
+          color: 'rgb(60 60 90)',
+        }}
+      >
+        ideas vault &mdash; built with Next.js
+      </footer>
     </div>
-  );
+  )
 }
