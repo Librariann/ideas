@@ -3,9 +3,10 @@
 interface SortSelectProps {
   value: string
   onChange: (value: string) => void
+  options?: { value: string; label: string }[]
 }
 
-const SORT_OPTIONS = [
+const DEFAULT_SORT_OPTIONS = [
   { value: 'newest', label: '최신순' },
   { value: 'oldest', label: '오래된순' },
   { value: 'feasibility-desc', label: '사업성 높은순' },
@@ -15,7 +16,7 @@ const SORT_OPTIONS = [
   { value: 'bookmarked', label: '즐겨찾기 우선' },
 ]
 
-export default function SortSelect({ value, onChange }: SortSelectProps) {
+export default function SortSelect({ value, onChange, options = DEFAULT_SORT_OPTIONS }: SortSelectProps) {
   return (
     <select
       value={value}
@@ -31,7 +32,7 @@ export default function SortSelect({ value, onChange }: SortSelectProps) {
         paddingRight: '32px',
       }}
     >
-      {SORT_OPTIONS.map((opt) => (
+      {options.map((opt) => (
         <option key={opt.value} value={opt.value}>
           {opt.label}
         </option>
